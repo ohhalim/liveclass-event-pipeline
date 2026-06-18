@@ -2,7 +2,14 @@ from unittest.mock import patch
 
 import pytest
 
-from event_generator import ERROR_CODES, LECTURE_IDS, PAGE_URLS, USER_IDS, generate_events, save_events
+from event_generator import (
+    ERROR_CODES,
+    LECTURE_IDS,
+    PAGE_URLS,
+    USER_IDS,
+    generate_events,
+    save_events,
+)
 
 
 def test_generate_events_returns_requested_count():

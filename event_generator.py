@@ -19,6 +19,7 @@ class Event(TypedDict):
     error_code: str | None
     created_at: datetime
 
+
 USER_IDS = [f"USER-{i:03d}" for i in range(1, 51)]
 LECTURE_IDS = [f"LEC-{i:03d}" for i in range(1, 11)]
 
