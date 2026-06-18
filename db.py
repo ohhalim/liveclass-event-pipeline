@@ -19,8 +19,8 @@ def get_connection():
 def setup_database():
     schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
 
-    with open(schema_path) as f:
-        schema_sql = f.read()
+    with open(schema_path) as schema_file:
+        schema_sql = schema_file.read()
 
     conn = get_connection()
     try:
