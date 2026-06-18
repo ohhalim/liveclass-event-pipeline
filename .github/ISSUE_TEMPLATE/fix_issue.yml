@@ -1,0 +1,28 @@
+name: 버그 수정 (Fix)
+description: 버그 수정 작업을 위한 템플릿
+title: "[Fix]: "
+labels: ["fix"]
+body:
+  - type: input
+    id: branch_keyword
+    attributes:
+      label: "Branch Keyword"
+      description: "영문 소문자로 간결한 브랜치 명을 입력하세요 (예: db-connection, chart-render)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug_description
+    attributes:
+      label: "버그 설명"
+      description: "어떤 문제가 발생했나요?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: fix_plan
+    attributes:
+      label: "수정 방법"
+      description: "어떻게 수정할 예정인가요?"
+    validations:
+      required: true
