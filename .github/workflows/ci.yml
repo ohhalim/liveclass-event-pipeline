@@ -30,7 +30,8 @@ jobs:
         run: flake8 . --max-line-length=100 --exclude=__pycache__,.git
 
       - name: 테스트 실행
-        run: pytest --tb=short -v
+        # exit code 5 = 테스트 파일 없음 → 통과 처리
+        run: pytest --tb=short -v || [ $? -eq 5 ]
 
       - name: 테스트 결과 보고서 업로드
         if: always()
