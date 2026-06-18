@@ -13,6 +13,21 @@ jobs:
       contents: write
       pull-requests: write
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: liveclass
+          POSTGRES_USER: liveclass
+          POSTGRES_PASSWORD: liveclass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,9 +42,15 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: 린트 검사 (flake8)
-        run: flake8 . --max-line-length=100 --exclude=__pycache__,.git
+        run: flake8 . --max-line-length=100 --exclude=__pycache__,.git,.venv
 
       - name: 테스트 실행
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: liveclass
+          DB_USER: liveclass
+          DB_PASSWORD: liveclass
         run: pytest --tb=short -v
 
       - name: 테스트 결과 보고서 업로드
