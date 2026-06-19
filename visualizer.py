@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 matplotlib.use("Agg")
 
-from db import get_connection
+from db import get_connection  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

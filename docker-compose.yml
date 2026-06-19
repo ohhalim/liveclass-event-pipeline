@@ -13,6 +13,20 @@ services:
       timeout: 5s
       retries: 5
 
+  # 1회성 적재 작업: DB 준비 후 이벤트 생성 → 저장 → 차트 생성까지 자동 수행
+  app-init:
+    build: .
+    env_file: .env
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./charts:/app/charts
+    command: python main.py
+
   app:
     build: .
     env_file: .env
@@ -22,6 +36,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      app-init:
+        condition: service_completed_successfully
     ports:
       - "8501:8501"
     volumes:

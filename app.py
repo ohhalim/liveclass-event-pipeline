@@ -6,8 +6,8 @@ import streamlit as st
 
 matplotlib.use("Agg")
 
-from db import get_connection, setup_database
-from event_generator import generate_events, save_events
+from db import get_connection, setup_database  # noqa: E402
+from event_generator import generate_events, save_events  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 
