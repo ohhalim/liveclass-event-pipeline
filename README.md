@@ -51,7 +51,13 @@ cp .env.example .env
 docker-compose up
 ```
 
-Streamlit 앱이 `http://localhost:8501`에서 실행됩니다.
+`docker compose up` 한 번으로 다음이 순서대로 자동 실행됩니다.
+
+1. **db** — PostgreSQL 기동 후 `pg_isready` health check 통과까지 대기
+2. **app-init** — DB 준비 후 `main.py` 1회 실행 (테이블 생성 → 이벤트 생성 → 저장 → 차트 생성)
+3. **app** — 적재 완료 후 Streamlit 데모 기동 (`http://localhost:8501`)
+
+즉 별도 조작 없이 이벤트 생성·저장이 자동으로 끝나며, Streamlit 화면에서는 가중치를 조정해 추가로 생성·시각화할 수 있습니다.
 
 ---
 
