@@ -42,10 +42,17 @@ def _random_timestamp() -> datetime:
     )
 
 
-def _build_event(user_id: str, session_id: str) -> Event:
+DEFAULT_WEIGHTS = [50, 30, 15, 5]
+
+
+def _build_event(
+    user_id: str,
+    session_id: str,
+    weights: list[int] | None = None,
+) -> Event:
     event_type = random.choices(
         ["page_view", "lecture_play", "purchase", "error"],
-        weights=[50, 30, 15, 5],
+        weights=weights or DEFAULT_WEIGHTS,
     )[0]
 
     event = {
@@ -72,13 +79,17 @@ def _build_event(user_id: str, session_id: str) -> Event:
     return event
 
 
-def generate_events(count: int = 1000) -> list[Event]:
+def generate_events(
+    count: int = 1000,
+    weights: list[int] | None = None,
+) -> list[Event]:
     session_ids = [str(uuid.uuid4())[:8] for _ in range(200)]
 
     return [
         _build_event(
             user_id=random.choice(USER_IDS),
             session_id=random.choice(session_ids),
+            weights=weights,
         )
         for _ in range(count)
     ]
@@ -105,6 +116,6 @@ def save_events(events: list[Event]) -> None:
         conn.close()
 
 
-def run(count: int = 1000) -> None:
-    events = generate_events(count)
+def run(count: int = 1000, weights: list[int] | None = None) -> None:
+    events = generate_events(count, weights=weights)
     save_events(events)
