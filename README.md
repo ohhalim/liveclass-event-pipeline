@@ -2,6 +2,42 @@
 
 라이브클래스 도메인의 유저 행동 이벤트를 생성하고 저장·분석·시각화하는 파이프라인.
 
+## 데모
+
+**Streamlit 웹 앱**: http://15.165.33.153:8501
+
+이벤트 타입별 가중치를 슬라이더로 조정하고, 버튼 클릭 시 이벤트를 생성·저장·시각화.
+
+---
+
+## 디렉토리 구조
+
+```
+liveclass-event-pipeline/
+├── app.py                  # Streamlit 웹 앱 (가중치 조정 + 차트 렌더링)
+├── main.py                 # CLI 진입점 (DB 초기화 → 이벤트 생성 → 시각화)
+├── db.py                   # DB 연결 및 스키마 초기화
+├── event_generator.py      # 이벤트 랜덤 생성 및 저장
+├── visualizer.py           # matplotlib 차트 생성 (파일 저장)
+├── schema.sql              # events 테이블 DDL
+├── queries.sql             # 집계 분석 쿼리 4개
+│
+├── Dockerfile
+├── docker-compose.yml      # app + db 통합 실행
+├── requirements.txt
+├── pytest.ini
+│
+├── assets/                 # AWS 아키텍처 구성도 이미지
+├── charts/                 # 생성된 차트 이미지 (시각화 결과)
+│
+└── tests/
+    ├── conftest.py         # DB 픽스처 (롤백 기반 테스트 격리)
+    ├── test_db.py
+    └── test_event_generator.py
+```
+
+---
+
 ## 실행 방법
 
 **필요한 도구**: Docker, Docker Compose
@@ -12,10 +48,10 @@ cd liveclass-event-pipeline
 
 cp .env.example .env
 
-docker compose up
+docker-compose up
 ```
 
-실행 후 `charts/` 폴더에 차트 이미지 4개가 저장됩니다.
+Streamlit 앱이 `http://localhost:8501`에서 실행됩니다.
 
 ---
 
@@ -78,3 +114,31 @@ PostgreSQL은 집계 함수, 윈도우 함수 등 분석 쿼리를 편하게 사
 
 **matplotlib Docker 환경**
 기본 백엔드는 화면 창을 띄우려 하지만 컨테이너에는 디스플레이가 없어 크래시. `matplotlib.use("Agg")`로 파일 출력 전용 백엔드로 변경.
+
+---
+
+## 선택 과제 B — AWS 아키텍처
+
+### 현재 구성 (이 과제)
+
+![현재 아키텍처](assets/aws-architecture-current.png)
+
+### 실제 운영 환경이라면
+
+![운영 아키텍처](assets/aws-architecture-prod.png)
+
+### 사용 서비스 및 선택 이유
+
+| 서비스 | 역할 | 선택 이유 |
+|--------|------|-----------|
+| **Kinesis** | 실시간 이벤트 수집 | 서비스에서 발생하는 이벤트를 유실 없이 버퍼링. SQS와 달리 스트림을 여러 컨슈머가 동시에 읽을 수 있어 확장성이 높음 |
+| **Lambda** | 이벤트 정제·변환 | 서버 관리 없이 이벤트 단위로 실행. 트래픽이 없을 때 비용이 0 |
+| **S3** | 원본 이벤트 보관 | 변환 전 raw 데이터를 저장해두면 스키마 변경 시 재처리 가능. 저장 비용이 낮음 |
+| **RDS PostgreSQL** | 집계용 DB | 관리형 서비스로 백업·패치·페일오버를 AWS가 처리. EC2에 직접 올리는 것 대비 운영 부담이 낮음 |
+| **Airflow** | 파이프라인 스케줄링 | 집계 쿼리 실행·차트 갱신 등 주기 작업을 DAG로 관리. 실패 시 재시도·알림이 내장되어 있음 |
+| **Metabase** | 대시보드 | SQL만 연결하면 차트·대시보드를 바로 구성 가능. 비개발자도 사용 가능 |
+| **CloudWatch** | 로그·알림 | 에러 이벤트 급증 등 이상 패턴 감지 시 알림. 별도 인프라 없이 AWS 콘솔에서 통합 관리 |
+
+### 아키텍처에서 가장 고민한 부분
+
+DB를 EC2에 직접 올릴지 RDS로 분리할지를 검토했습니다. EC2 단일 구성은 초기 구축 비용이 낮지만, 서버 장애 시 DB도 함께 중단되는 위험이 있습니다. RDS로 분리하면 DB 계층의 가용성과 백업을 독립적으로 관리할 수 있어 운영 안정성이 확보됩니다. 현재 과제 규모에서는 EC2 단일 구성으로 시작하되, 트래픽 증가 시 RDS로 단계적으로 전환하는 방향이 적절하다고 검토했습니다.

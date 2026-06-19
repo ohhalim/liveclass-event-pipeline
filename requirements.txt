@@ -1,5 +1,6 @@
 psycopg2-binary==2.9.9
 matplotlib==3.8.4
+streamlit==1.35.0
 flake8==7.0.0
 pytest==8.2.0
 python-dotenv==1.0.1
