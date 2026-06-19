@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 matplotlib.use("Agg")
 
 from db import get_connection  # noqa: E402
+from queries import QUERIES  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +28,7 @@ def _save(fig: plt.Figure, filename: str) -> None:
 
 
 def chart_event_type_counts(conn) -> None:
-    rows = _fetch(conn, """
-        SELECT event_type, COUNT(*) AS count
-        FROM events
-        GROUP BY event_type
-        ORDER BY count DESC
-    """)
+    rows = _fetch(conn, QUERIES["event_type_counts"])
 
     types = [r[0] for r in rows]
     counts = [r[1] for r in rows]
@@ -47,13 +43,7 @@ def chart_event_type_counts(conn) -> None:
 
 
 def chart_date_trend(conn) -> None:
-    rows = _fetch(conn, """
-        SELECT DATE(created_at) AS date, COUNT(*) AS count
-        FROM events
-        WHERE created_at >= NOW() - INTERVAL '7 days'
-        GROUP BY DATE(created_at)
-        ORDER BY date
-    """)
+    rows = _fetch(conn, QUERIES["date_trend_7days"])
 
     dates = [str(r[0]) for r in rows]
     counts = [r[1] for r in rows]
@@ -69,13 +59,7 @@ def chart_date_trend(conn) -> None:
 
 
 def chart_top10_users(conn) -> None:
-    rows = _fetch(conn, """
-        SELECT user_id, COUNT(*) AS count
-        FROM events
-        GROUP BY user_id
-        ORDER BY count DESC
-        LIMIT 10
-    """)
+    rows = _fetch(conn, QUERIES["top10_users_by_activity"])
 
     users = [r[0] for r in rows]
     counts = [r[1] for r in rows]
@@ -89,12 +73,8 @@ def chart_top10_users(conn) -> None:
 
 
 def chart_event_type_ratio(conn) -> None:
-    rows = _fetch(conn, """
-        SELECT event_type, COUNT(*) AS count
-        FROM events
-        GROUP BY event_type
-        ORDER BY count DESC
-    """)
+    # event_type_ratio: (event_type, count, percentage) — 파이 차트는 count로 비율 표현
+    rows = _fetch(conn, QUERIES["event_type_ratio"])
 
     types = [r[0] for r in rows]
     counts = [r[1] for r in rows]

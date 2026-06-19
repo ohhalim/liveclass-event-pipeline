@@ -8,6 +8,7 @@ matplotlib.use("Agg")
 
 from db import get_connection, setup_database  # noqa: E402
 from event_generator import generate_events, save_events  # noqa: E402
+from queries import QUERIES  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,10 +20,7 @@ def _fetch(conn, query: str) -> list[tuple]:
 
 
 def _chart_counts(conn) -> plt.Figure:
-    rows = _fetch(conn, """
-        SELECT event_type, COUNT(*) AS cnt
-        FROM events GROUP BY event_type ORDER BY cnt DESC
-    """)
+    rows = _fetch(conn, QUERIES["event_type_counts"])
     fig, ax = plt.subplots()
     ax.bar([r[0] for r in rows], [r[1] for r in rows])
     ax.set_title("Event Type Counts")
@@ -32,10 +30,7 @@ def _chart_counts(conn) -> plt.Figure:
 
 
 def _chart_ratio(conn) -> plt.Figure:
-    rows = _fetch(conn, """
-        SELECT event_type, COUNT(*) AS cnt
-        FROM events GROUP BY event_type ORDER BY cnt DESC
-    """)
+    rows = _fetch(conn, QUERIES["event_type_ratio"])
     fig, ax = plt.subplots()
     ax.pie([r[1] for r in rows], labels=[r[0] for r in rows], autopct="%1.1f%%")
     ax.set_title("Event Type Distribution")
@@ -43,12 +38,7 @@ def _chart_ratio(conn) -> plt.Figure:
 
 
 def _chart_trend(conn) -> plt.Figure:
-    rows = _fetch(conn, """
-        SELECT DATE(created_at) AS date, COUNT(*) AS cnt
-        FROM events
-        WHERE created_at >= NOW() - INTERVAL '7 days'
-        GROUP BY DATE(created_at) ORDER BY date
-    """)
+    rows = _fetch(conn, QUERIES["date_trend_7days"])
     fig, ax = plt.subplots()
     ax.plot([str(r[0]) for r in rows], [r[1] for r in rows], marker="o")
     ax.set_title("Daily Event Trend (Last 7 Days)")
@@ -59,10 +49,7 @@ def _chart_trend(conn) -> plt.Figure:
 
 
 def _chart_top10(conn) -> plt.Figure:
-    rows = _fetch(conn, """
-        SELECT user_id, COUNT(*) AS cnt
-        FROM events GROUP BY user_id ORDER BY cnt DESC LIMIT 10
-    """)
+    rows = _fetch(conn, QUERIES["top10_users_by_activity"])
     users = [r[0] for r in rows]
     counts = [r[1] for r in rows]
     fig, ax = plt.subplots()
