@@ -2,6 +2,14 @@
 
 라이브클래스 도메인의 유저 행동 이벤트를 생성하고 저장·분석·시각화하는 파이프라인.
 
+## 데모
+
+**Streamlit 웹 앱**: http://15.165.33.153:8501
+
+이벤트 타입별 가중치를 슬라이더로 조정하고, 버튼 클릭 시 이벤트를 생성·저장·시각화.
+
+---
+
 ## 실행 방법
 
 **필요한 도구**: Docker, Docker Compose
@@ -12,10 +20,10 @@ cd liveclass-event-pipeline
 
 cp .env.example .env
 
-docker compose up
+docker-compose up
 ```
 
-실행 후 `charts/` 폴더에 차트 이미지 4개가 저장됩니다.
+Streamlit 앱이 `http://localhost:8501`에서 실행됩니다.
 
 ---
 
