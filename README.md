@@ -93,55 +93,11 @@ PostgreSQL은 집계 함수, 윈도우 함수 등 분석 쿼리를 편하게 사
 
 ### 현재 구성 (이 과제)
 
-```mermaid
-flowchart LR
-    User["사용자 브라우저"] -->|HTTP 8501| Streamlit
-    subgraph EC2
-        Streamlit["Streamlit 앱\n(Docker)"] -->|psycopg2| PG["PostgreSQL\n(Docker)"]
-    end
-```
+![현재 아키텍처](assets/aws-architecture-current.png)
 
 ### 실제 운영 환경이라면
 
-```mermaid
-flowchart LR
-    subgraph Sources["이벤트 소스"]
-        Web["웹 서비스"]
-        App["모바일 앱"]
-    end
-
-    subgraph Ingestion["수집"]
-        Kinesis["Amazon Kinesis\nData Streams"]
-    end
-
-    subgraph Processing["처리"]
-        Lambda["AWS Lambda\n이벤트 정제·변환"]
-    end
-
-    subgraph Storage["저장"]
-        S3["S3\n원본 이벤트 보관"]
-        RDS["RDS PostgreSQL\n집계용 DB"]
-    end
-
-    subgraph Orchestration["스케줄링"]
-        Airflow["Apache Airflow\non EC2/ECS"]
-    end
-
-    subgraph Viz["시각화"]
-        Metabase["Metabase\n대시보드"]
-    end
-
-    subgraph Monitoring["모니터링"]
-        CW["CloudWatch\n로그·알림"]
-    end
-
-    Sources --> Kinesis --> Lambda
-    Lambda --> S3
-    Lambda --> RDS
-    Airflow -->|주기 집계| RDS
-    RDS --> Metabase
-    Lambda --> CW
-```
+![운영 아키텍처](assets/aws-architecture-prod.png)
 
 ### 사용 서비스 및 선택 이유
 
