@@ -19,11 +19,12 @@ liveclass-event-pipeline/
 ├── db.py                   # DB 연결 및 스키마 초기화
 ├── event_generator.py      # 이벤트 랜덤 생성 및 저장
 ├── visualizer.py           # matplotlib 차트 생성 (파일 저장)
+├── queries.py              # queries.sql을 단일 소스로 로드 (중복 제거)
 ├── schema.sql              # events 테이블 DDL
-├── queries.sql             # 집계 분석 쿼리 4개
+├── queries.sql             # 집계 분석 쿼리 4개 (정식 출처)
 │
 ├── Dockerfile
-├── docker-compose.yml      # app + db 통합 실행
+├── docker-compose.yml      # db + app-init(자동 적재) + app(데모) 통합 실행
 ├── requirements.txt
 ├── pytest.ini
 │
@@ -57,7 +58,8 @@ docker-compose up
 2. **app-init** — DB 준비 후 `main.py` 1회 실행 (테이블 생성 → 이벤트 생성 → 저장 → 차트 생성)
 3. **app** — 적재 완료 후 Streamlit 데모 기동 (`http://localhost:8501`)
 
-즉 별도 조작 없이 이벤트 생성·저장이 자동으로 끝나며, Streamlit 화면에서는 가중치를 조정해 추가로 생성·시각화할 수 있습니다.
+별도 조작 없이 이벤트 생성·저장이 자동으로 완료됩니다
+Streamlit 화면에서는 가중치를 조정해 추가로 생성·시각화할 수 있습니다.
 
 ---
 
@@ -112,14 +114,13 @@ PostgreSQL은 집계 함수, 윈도우 함수 등 분석 쿼리를 편하게 사
 
 ## 구현하면서 고민한 점
 
-**환경변수 기본값 제거**
-`os.getenv("DB_HOST", "localhost")`처럼 기본값을 두면 설정 누락 시 오류 없이 넘어가 문제를 늦게 발견. `os.environ[]`으로 바꿔 미설정 시 즉시 실패하도록 설계.
+**이벤트를 한 테이블에 담을지, 타입별로 나눌지**
 
-**docker-compose depends_on**
-`depends_on`만으로는 PostgreSQL이 시작됐다는 것만 확인. 초기화가 끝나기 전에 앱이 연결을 시도해 실패. `pg_isready` health check로 DB가 준비된 후 앱이 실행되도록 변경.
+과제에서 JSON을 통째로 저장하지 말고 필드를 구분해 저장하라고 해서, 컬럼 분리는 전제로 두고 타입별 테이블 분리와 단일 와이드 테이블을 비교했습니다.
 
-**matplotlib Docker 환경**
-기본 백엔드는 화면 창을 띄우려 하지만 컨테이너에는 디스플레이가 없어 크래시. `matplotlib.use("Agg")`로 파일 출력 전용 백엔드로 변경.
+- 타입별로 나누면 정규화는 깔끔하지만, "타입별 횟수"나 "유저별 총 이벤트 수"처럼 전체를 가로지르는 집계마다 UNION·JOIN이 필요해집니다.
+- 이번 분석 쿼리는 전부 그런 교차 집계라, 단일 `events` 테이블에 담고 타입 전용 컬럼은 NULL을 허용해 `GROUP BY` 한 번으로 끝나게 했습니다.
+- 대신 타입이 계속 늘면 NULL 컬럼이 많은 sparse 테이블이 되니, 그때는 공통 컬럼 + 타입별 가변 필드를 `JSONB`로 받는 식으로 바꿀 수 있다고 생각합니다.
 
 ---
 
